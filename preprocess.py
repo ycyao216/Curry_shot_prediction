@@ -1,14 +1,16 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 # Initalize variables
 data_path = 'shot_logs.csv'
 player = 'stephen curry'
 scaling_features = ['SHOT_DIST']
-features_path = 'features.csv'
-labels_path = 'labels.csv'
+train_path = 'train.csv'
+valid_path = 'valid.csv'
+test_path = 'test.csv'
 
-def process_data(data_path, player, scaling_features, feature_path, labels_path):
+def process_data(data_path, player, scaling_features, train_path, valid_path, test_path):
 
     # Load data and select player
     df = pd.read_csv(data_path)
@@ -18,9 +20,18 @@ def process_data(data_path, player, scaling_features, feature_path, labels_path)
     for col in scaling_features:
         df[col] = (df[col] - df[col].mean()) / df[col].std()
 
+    df['SHOT_RESULT'] = df['SHOT_RESULT'].replace({'missed': 0, 'made': 1})
+
+    train, test = train_test_split(df, test_size=0.1, random_state=42)
+    train, valid = train_test_split(train, test_size=1/9, random_state=42)
+    
+    cols = scaling_features
+    cols.append('SHOT_RESULT')
+
     # Export features and labels to csv
-    df[scaling_features].to_csv(feature_path, index=False)
-    df['SHOT_RESULT'].replace({'missed': 0, 'made': 1}).to_csv(labels_path, index=False)
+    train[cols].to_csv(train_path)
+    valid[cols].to_csv(valid_path)
+    test[cols].to_csv(test_path)
 
 if __name__ == '__main__':
-    process_data(data_path, player, scaling_features, features_path, labels_path)
+    process_data(data_path, player, scaling_features, train_path, valid_path, test_path)
